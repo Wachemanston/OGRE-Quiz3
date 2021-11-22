@@ -54,6 +54,8 @@ protected:
 	void createScene_01();
     bool keyPressed( const OIS::KeyEvent &arg );
     bool keyReleased( const OIS::KeyEvent &arg );
+	bool mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
+	bool mouseMoved( const OIS::MouseEvent &arg );
     void createSpace();
 
     void reset();
@@ -75,6 +77,9 @@ protected:
 
 	enum ObjectType { Empty = 0, Obstacle = 1, Robot = 2, Sphere = 3 };
 	int map[10][10];
+
+	Ogre::Vector3 targetPos;
+	bool isAnimation;
 };
 
 #endif // #ifndef __BasicTutorial_00_h_

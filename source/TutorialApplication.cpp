@@ -179,6 +179,7 @@ void BasicTutorial_00::createScene_00(void)
     mSceneMgr
 		->getRootSceneNode()
 		->createChildSceneNode(
+			"plane",
             Vector3(0.0, 0.0, -750.0),
             Quaternion( angle, axis))
 		->attachObject(ent);
@@ -220,6 +221,23 @@ void BasicTutorial_00::createScene( void ) {
 
 }
 
+bool BasicTutorial_00::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
+{
+	if (id == OIS::MB_Left) {
+		Ray mRay = mTrayMgr->getCursorRay(mCamera);
+		std::pair<bool,Real> result = mRay.intersects(Plane(Vector3::UNIT_Y, 0));
+		if (result.first) {
+			targetPos = mRay.getPoint(result.second);
+			isAnimation = true;
+		}
+	}
+
+    return BaseApplication::mousePressed( arg, id );
+}
+
+bool BasicTutorial_00::mouseMoved( const OIS::MouseEvent &arg ) {
+	if (mTrayMgr->injectMouseMove(arg)) return true;
+}
 //
 // What is stored in the file for arg.key?
 // ASCII code? If no, what is it?
@@ -309,8 +327,28 @@ bool BasicTutorial_00::keyReleased( const OIS::KeyEvent &arg )
 bool BasicTutorial_00::frameStarted(const Ogre::FrameEvent& evt)
 {
 	bool flg = Ogre::FrameListener::frameStarted(evt);
-    //
-    Vector3 mdir = Vector3(0.0, 0.0, 0.0);
+    
+	AnimationState* mAnimationState;
+	if (isAnimation) {
+		int stepUnit = 20;
+		Entity* mEntity = static_cast<Entity*>(mRobot->getAttachedObject(0));
+		mAnimationState = mEntity->getAnimationState("Walk");
+		mAnimationState->setLoop(true);
+		mAnimationState->setEnabled(true);
+		mAnimationState->addTime(0.5 * evt.timeSinceLastFrame);
+
+		Vector3 pos = mRobot->getPosition();
+		Vector3 vec = targetPos - pos;
+		Real length = vec.length();
+		if (length > 1.0) {
+			vec.normalise();
+			mRobot->lookAt(targetPos, Node::TransformSpace::TS_WORLD);
+			mRobot->yaw(Radian(90));
+			mRobot->translate(evt.timeSinceLastFrame * stepUnit * vec);
+		} else {
+			isAnimation = false;
+		}
+    /*Vector3 mdir = Vector3(0.0, 0.0, 0.0);
     if (mMoveDirection == mMoveDirection_UP ) {
         mdir += Vector3(0.0, 0.0, -5.0);
     }
@@ -325,8 +363,13 @@ bool BasicTutorial_00::frameStarted(const Ogre::FrameEvent& evt)
 	
     if (mMoveDirection == mMoveDirection_RIGHT ) {
         mdir += Vector3(5.0, 0.0, 0.0);
-    }
-    //
+    }*/
+	} else {
+		Entity* mEntity = static_cast<Entity*>(mRobot->getAttachedObject(0));
+		mAnimationState = mEntity->getAnimationState("Idle");
+		mAnimationState->setLoop(true);
+		mAnimationState->setEnabled(true);
+	}
     return flg;
 }
 
