@@ -20,6 +20,7 @@ This is an assignment of 3D Game Programming
 #ifndef __BasicTutorial_00_h_
 #define __BasicTutorial_00_h_
 
+#include <stdio.h>
 #include "BaseApplication.h"
 
 using namespace Ogre;
@@ -71,6 +72,9 @@ protected:
 
     SceneNode *mObstacle[64];
     Entity *mObstacleEntity[64];
+
+	enum ObjectType { Empty = 0, Obstacle = 1, Robot = 2, Sphere = 3 };
+	int map[10][10];
 };
 
 #endif // #ifndef __BasicTutorial_00_h_

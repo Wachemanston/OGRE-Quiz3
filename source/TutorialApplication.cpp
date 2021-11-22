@@ -24,10 +24,7 @@ const float PI = 3.141592654;
 #define mMoveDirection_RIGHT 4
 
 
-BasicTutorial_00::BasicTutorial_00(void)
-    : 
-mMoveDirection(mMoveDirection_NONE), mNumSpheres(300)
-{}
+BasicTutorial_00::BasicTutorial_00(void) : mMoveDirection(mMoveDirection_NONE) {}
 
 void BasicTutorial_00::chooseSceneManager()
 {
@@ -77,85 +74,50 @@ void BasicTutorial_00::reset()
 	createScene();
 }
 
-// create all spheres
-// "Examples/red"
-// "Examples/green"
-// "Examples/blue"
-// "Examples/yellow"
 void BasicTutorial_00::createSpace()
 {
     String name_en;
     String name_sn;
-	int index = 0;
+
+	int edge = 10;
+	int gap = 40;
+	int temp[10][10] = {
+		{Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle},
+		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Obstacle},
+		{Obstacle,	Empty,		Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Empty,		Obstacle},
+		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Obstacle},
+		{Empty,		Obstacle,	Empty,		Robot,		Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle},
+		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle,	Empty,		Empty,		Obstacle,	Empty},
+		{Obstacle,	Empty,		Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Empty,		Obstacle},
+		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Obstacle},
+		{Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle},
+	};
 	
-    for (int i = 0; i < mNumSpheres; ++i ) {
+    for (int i = 0; i < edge; ++i ) {
+		for (int j = 0; j < edge; ++j ) {
+			int index = 10 * i + j;
+			map[i][j] = temp[i][j];
+			int objectType = map[i][j];
+			int x = (j - edge / 2) * gap;
+			int z = (i - edge / 2) * gap;
 
-        genNameUsingIndex("R1", index, name_en);
-		genNameUsingIndex("S1", index, name_sn);
-	    mEntity[index] = mSceneMgr->createEntity( name_en, "sphere.mesh" );
-
-		switch(rand() % 3) {
-			case 0:
-				mEntity[index]->setMaterialName("Examples/red");
-				break;
-			case 1:
-				mEntity[index]->setMaterialName("Examples/green");
-				break;
-			case 2:
-				mEntity[index]->setMaterialName("Examples/blue");
-				break;
+			switch(objectType) {
+				case Obstacle:
+					genNameUsingIndex("E_", index, name_en);
+					genNameUsingIndex("S_", index, name_sn);
+					mObstacleEntity[index] = mSceneMgr->createEntity( name_en, "Barrel.mesh" );
+					mObstacle[index] = mSceneMgr->getRootSceneNode()->createChildSceneNode(name_sn, Vector3(x, 0, z));
+					mObstacle[index]->attachObject(mObstacleEntity[index]);
+					mObstacle[index]->scale(6.0, 6.0, 6.0);
+					break;
+				case Robot:
+					mRobotEntity = mSceneMgr->createEntity("robot_entity", "robot.mesh" );
+					mRobot = mSceneMgr->getRootSceneNode()->createChildSceneNode("robot_scene_node", Vector3(x, 0, z));
+					mRobot->attachObject(mRobotEntity);
+					break;
+			}
 		}
-
-		int x = rand() % 800 - 400;
-		int z = rand() % 800 - 400;
-		mSceneNode[index] = mSceneMgr->getRootSceneNode()->createChildSceneNode( 
-            name_sn, Vector3(x, 0, z));
-		mSceneNode[index]->attachObject(mEntity[index]);
-		//scale the small spheres
-		mSceneNode[index]->scale(0.15, 0.15, 0.15);
-		index++;
     }
-
-	// big sphere
-	index++;
-	mEntity[index] = mSceneMgr->createEntity( "big_sphere", "sphere.mesh" );
-	mEntity[index]->setMaterialName("Examples/yellow");
-	mSceneNode[index] = mSceneMgr->getRootSceneNode()->createChildSceneNode( 
-            "big_sphere", Vector3(0, 0, 0));
-	mSceneNode[index]->attachObject(mEntity[index]);
-	mSceneNode[index]->setPosition(0, 0, 0);
-
-	// barrels
-	index++;
-    int mNumObstacles = 80;
-    for (int i = 0; i < mNumObstacles; ++i ) {
-        genNameUsingIndex("R1", index, name_en);
-        genNameUsingIndex("S1", index, name_sn);
-        mEntity[index] = mSceneMgr
-            ->createEntity( name_en, "Barrel.mesh" );
-        mSceneNode[index] = mSceneMgr
-            ->getRootSceneNode()
-            ->createChildSceneNode(name_sn);
-		int x = 0, z = 0;
-		if (i < 20) {
-			z = -500;
-			x = 50 * i - 500;
-		} else if (i < 40) {
-			x = 500;
-			z = 50 * i - 1500;
-		} else if (i < 60) {
-			z = 500;
-			x = 50 * (i - 40) - 500;
-		} else {
-			x = -500;
-			z = 50 * (i - 40) - 1500;
-		}
-		mSceneNode[index]->translate(x, 0, z);
-        mSceneNode[index]->scale(10.0, 10.0, 10.0);
-        mSceneNode[index]->attachObject(mEntity[index]);
-		index++;
-    }
-
 }
 
 void BasicTutorial_00::createScene_00(void) 
