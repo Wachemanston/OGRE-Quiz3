@@ -11,7 +11,7 @@ My Name: Yu-Shu Li
 My ID: 310552024
 \n
 My Email: yushuli.cs10@nycu.edu.tw
-\n Date: 2021/11/04
+\n Date: 2021/11/22
 
 This is an assignment of 3D Game Programming
 
@@ -55,18 +55,6 @@ protected:
     bool keyReleased( const OIS::KeyEvent &arg );
     void createSpace();
 
-    void resolveCollisionSmallSpheres();
-    void resolveCollisionLargeSphere();
-    void resolveCollision(
-    SceneNode *nodeA, SceneNode *nodeB,
-    float rA, float rB);
-    void resolveCollision(
-    SceneNode *nodeA, SceneNode *nodeB,
-    float rA, float rB, float wA, float wB);
-    void resolveCollision();
-    void resolveCollisionPair(
-    Ogre::SceneNode *nodeA, Ogre::SceneNode *nodeB, float rA, float rB);
-
     void reset();
 protected:
     Ogre::Viewport* mViewportArr[8];
@@ -75,14 +63,14 @@ protected:
 	OgreBites::SdkCameraMan* mCameraManArr[8];
 
     int mMoveDirection;
-    SceneNode *mLargeSphereSceneNode;
-    Entity *mLargeSphereEntity;
+    SceneNode *mRobot;
+    Entity *mRobotEntity;
 
-    int mNumSpheres;
-    SceneNode *mSceneNode[1024];
-    Entity *mEntity[1024];
+    SceneNode *mSphere[64];
+    Entity *mSphereEntity[64];
 
-
+    SceneNode *mObstacle[64];
+    Entity *mObstacleEntity[64];
 };
 
 #endif // #ifndef __BasicTutorial_00_h_

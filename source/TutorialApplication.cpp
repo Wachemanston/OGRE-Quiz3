@@ -49,12 +49,6 @@ void BasicTutorial_00::createCamera_00(void)
 
 void BasicTutorial_00::createCamera_01(void)
 {
-	mSceneMgr = mSceneMgrArr[1];
-	mCamera = mCameraArr[1] = mSceneMgr->createCamera("PlayerCam");
-	mCamera->setPosition(Ogre::Vector3(0,350,0.0));
-	mCamera->lookAt(Ogre::Vector3(0.00001,0,0));
-	mCamera->setNearClipDistance(5);
-	mCameraManArr[1] = new OgreBites::SdkCameraMan(mCamera);   // create a default camera controller
 
 }
 
@@ -73,60 +67,7 @@ void BasicTutorial_00::createViewport_00(void)
 
 void BasicTutorial_00::createViewport_01(void)
 {
-}
 
-void BasicTutorial_00::resolveCollisionPair(
-    SceneNode *nodeA, SceneNode *nodeB,
-    float rA, float rB)
-{
-    Vector3 posA = nodeA->getPosition();
-    Vector3 posB = nodeB->getPosition();
-    float R = rA + rB;
-    
-	Vector3 diff = posB - posA;
-	Real length = diff.length();
-	if (length < R) {
-		diff.normalise();
-		String name = nodeA->getName();
-		if (name != "big_sphere") {
-			nodeA->translate(-diff * ceil(R / length / 2));
-		}
-		nodeB->translate(diff * ceil(R / length / 2));
-	}
-}
-
-void BasicTutorial_00::resolveCollisionLargeSphere()
-{
-    float smallR = 15; // small sphere radius
-
-    float largeR = 1.0/0.15*smallR; // large sphere radius
-
-	SceneNode* largeSphere = mSceneNode[mNumSpheres + 1];
-	for (int i = 0; i < mNumSpheres; ++i) {
-		resolveCollisionPair(largeSphere, mSceneNode[i], largeR, smallR);
-    }
-}
-
-// perform collision handling for all pairs
-void BasicTutorial_00::resolveCollisionSmallSpheres()
-{
-    float ri = 15; // sphere radius
-    float rj = 15; // sphere radius
-    for (int i = 0; i < mNumSpheres; ++i)
-	{
-		for (int j = i+1; j < mNumSpheres; ++j) {
-            resolveCollisionPair(mSceneNode[i], mSceneNode[j], ri, rj);
-        }
-    }
-}
-
-void BasicTutorial_00::resolveCollision()
-{
-    int num = 10;
-    for (int i = 0; i < num;++i) {
-        resolveCollisionSmallSpheres();
-        resolveCollisionLargeSphere();
-    }
 }
 
 // reset positions of all small spheres
@@ -281,12 +222,6 @@ void BasicTutorial_00::createScene_00(void)
 		->attachObject(ent);
 
     createSpace();
-
-    ///////////////////////
-        // add your own stuff
-        ///////////////////////
-    
-    resolveCollision();
 }
 
 void BasicTutorial_00::createScene_01(void) 
@@ -379,75 +314,6 @@ bool BasicTutorial_00::keyPressed( const OIS::KeyEvent &arg )
         //
     }
 
-    if (arg.key == OIS::KC_1 ) {
-        mCameraMan->getCamera()
-            ->setPosition(Vector3(-22.30,	409.24,	816.74));
-        mCameraMan->getCamera()
-            ->setDirection(Vector3(0.02,	-0.23,	-0.97));
-
-    }
-
-    if (arg.key == OIS::KC_2 ) {
-        mCameraMan->getCamera()
-            ->setPosition(Vector3(-824.52,	468.58,	68.45));
-        mCameraMan->getCamera()
-            ->setDirection(Vector3(0.94,	-0.31,	-0.11));
-
-        //-1463.00	606.45	-513.24
-        //0.88	-0.47	0.10
-    }
-
-
-    if (arg.key == OIS::KC_3 ) {
-        mCameraMan->getCamera()
-            ->setPosition(Vector3(19.94,	822.63,	30.79));
-        mCameraMan->getCamera()
-            ->setDirection(Vector3(0.00,	-0.99,	-0.11));
-        //19.94	822.63	30.79
-        //0.00	-0.99	-0.11
-    }
-
-    if (arg.key == OIS::KC_U ) {
-		mMoveDirection = mMoveDirection_UP;
-    }
-
-    if (arg.key == OIS::KC_H ) {
-		mMoveDirection = mMoveDirection_LEFT;
-    }
-
-    if (arg.key == OIS::KC_J ) {
-		mMoveDirection = mMoveDirection_DOWN;
-    }
-
-    if (arg.key == OIS::KC_K ) {
-		mMoveDirection = mMoveDirection_RIGHT;
-    }
-
-    if (arg.key == OIS::KC_B ) {
-		reset();
-    }
-
-    if (arg.key == OIS::KC_7 ) {
-		mNumSpheres = 100;
-		reset();
-    }
-
-    if (arg.key == OIS::KC_8 ) {
-		mNumSpheres = 200;
-		reset();
-    }
-
-    if (arg.key == OIS::KC_9 ) {
-		mNumSpheres = 300;
-		reset();
-    }
-
-    if (arg.key == OIS::KC_0 ) {
-		mNumSpheres = 500;
-		reset();
-    }
-
-
     BaseApplication::keyPressed(arg);
 
     return flg;
@@ -498,23 +364,6 @@ bool BasicTutorial_00::frameStarted(const Ogre::FrameEvent& evt)
     if (mMoveDirection == mMoveDirection_RIGHT ) {
         mdir += Vector3(5.0, 0.0, 0.0);
     }
-
-	mSceneNode[mNumSpheres + 1]->translate(mdir);
-
-	Vector3 pos = mSceneNode[mNumSpheres + 1]->getPosition();
-	float range = 370;
-	if (pos.x < -range) {
-		mSceneNode[mNumSpheres + 1]->setPosition(-range, 0, pos.z);
-	} else if (pos.x > range) {
-		mSceneNode[mNumSpheres + 1]->setPosition(range, 0, pos.z);
-	}
-	if (pos.z < -range) {
-		mSceneNode[mNumSpheres + 1]->setPosition(pos.x, 0, -range);
-	} else if (pos.z > range) {
-		mSceneNode[mNumSpheres + 1]->setPosition(pos.x, 0, range);
-	}
-
-    resolveCollision();
     //
     return flg;
 }
