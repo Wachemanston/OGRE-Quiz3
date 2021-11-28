@@ -61,6 +61,7 @@ protected:
     void aStarSearch();
 	void printMap(void);
 	Ogre::Vector2 posToGrid(Vector3 pos);
+	Ogre::Vector3 gridToPos(Vector2 pos);
 	bool isValid(int row, int col);
 	bool isUnBlocked(int row, int col);
 
@@ -86,7 +87,9 @@ protected:
 	int map[10][10];
 
 	Ogre::Vector3 targetPos;
+	Ogre::Vector3 curTarget;
 	bool isAnimation;
+	std::list<Vector2> route;
 };
 
 #endif // #ifndef __BasicTutorial_00_h_

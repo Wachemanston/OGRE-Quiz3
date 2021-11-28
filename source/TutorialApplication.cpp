@@ -141,17 +141,19 @@ double calculateHValue(int row, int col, Pair dest)
  
 // A Utility Function to trace the path from the source
 // to destination
-void tracePath(cell cellDetails[][COL], Pair dest)
+std::list<Vector2> tracePath(cell cellDetails[][COL], Pair dest)
 {
     printf("\nThe Path is ");
     int row = dest.first;
     int col = dest.second;
+	std::list<Vector2> route;
  
     stack<Pair> Path;
  
     while (!(cellDetails[row][col].parent_i == row
              && cellDetails[row][col].parent_j == col)) {
         Path.push(make_pair(row, col));
+		route.push_front(Vector2(row, col));
         int temp_row = cellDetails[row][col].parent_i;
         int temp_col = cellDetails[row][col].parent_j;
         row = temp_row;
@@ -165,7 +167,7 @@ void tracePath(cell cellDetails[][COL], Pair dest)
         printf("-> (%d,%d) ", p.first, p.second);
     }
  
-    return;
+    return route;
 }
  
 // A Function to find the shortest path between
@@ -297,7 +299,7 @@ void BasicTutorial_00::aStarSearch()
                 cellDetails[i - 1][j].parent_i = i;
                 cellDetails[i - 1][j].parent_j = j;
                 printf("The destination cell is found\n");
-                tracePath(cellDetails, dest);
+                route = tracePath(cellDetails, dest);
                 foundDest = true;
                 return;
             }
@@ -345,7 +347,7 @@ void BasicTutorial_00::aStarSearch()
                 cellDetails[i + 1][j].parent_i = i;
                 cellDetails[i + 1][j].parent_j = j;
                 printf("The destination cell is found\n");
-                tracePath(cellDetails, dest);
+                route = tracePath(cellDetails, dest);
                 foundDest = true;
                 return;
             }
@@ -392,7 +394,7 @@ void BasicTutorial_00::aStarSearch()
                 cellDetails[i][j + 1].parent_i = i;
                 cellDetails[i][j + 1].parent_j = j;
                 printf("The destination cell is found\n");
-                tracePath(cellDetails, dest);
+                route = tracePath(cellDetails, dest);
                 foundDest = true;
                 return;
             }
@@ -441,7 +443,7 @@ void BasicTutorial_00::aStarSearch()
                 cellDetails[i][j - 1].parent_i = i;
                 cellDetails[i][j - 1].parent_j = j;
                 printf("The destination cell is found\n");
-                tracePath(cellDetails, dest);
+                route = tracePath(cellDetails, dest);
                 foundDest = true;
                 return;
             }
@@ -649,68 +651,16 @@ void BasicTutorial_00::printMap(void) {
 	}
 }
 
-/*void updateMap(void) {
-	Vector2 goal = posToGrid(targetPos);
-	Vector2 start = posToGrid(mRobot->getPosition());
-	int edge = 10;
-	std::cout << "goal = (" << goal.x << ", " << goal.y << ")" << std::endl;
-	std::cout << (int) goal.x << ", " << (int) goal.y << ", " << map[(int) goal.x][(int) goal.y] << std::endl;
-	// If target map is not empty, return
-	if (map[(int) goal.x][(int) goal.y] != Empty) {
-		return;
-	}
-
-	// Update the weight of all empty map from destination
-	for (int i = 0; i < edge; i++) {
-		for (int j = 0; j < edge; j++) {
-			if (map[i][j] == Empty) {
-				map[i][j] = abs(goal.x - i) + abs(goal.y - j);
-			}
-		}
-	}
-	printMap();
-	// Update the weight of all empty map from start with BFS
-	int currentMinCost = 64;
-	std::vector<Vector2> dir;
-	dir.push_back(Vector2(1, 0));
-	dir.push_back(Vector2(0, 1));
-	dir.push_back(Vector2(-1, 0));
-	dir.push_back(Vector2(0, -1));
-
-	std::queue<std::pair<int, Vector2>> path;
-	std::set<int> visited;
-	path.push(std::pair<int, Vector2>(0, Vector2(start.x, start.y)));
-	int iter = 1;
-	while (!path.empty()) {
-		std::pair<int, Vector2> current = path.front();
-		path.pop();
-		int curCost = current.first;
-		Vector2 curPath = current.second;
-		
-		int x = static_cast<int>(curPath.x);
-		int y = static_cast<int>(curPath.y);
-
-		std::cout << "iter = " << iter << ", x=" << x << ",y =" << y << std::endl;
-		iter++;
-
-		map[x][y] += curCost;
-
-		visited.insert(curPath.x * edge + curPath.y);
-		for (int i = 0; i < dir.size(); i++) {
-			int nextX = curPath.x + dir[i].x;
-			int nextY = curPath.y + dir[i].y;
-			if (map[nextX][nextY] == Empty && visited.count(nextX * edge + nextY) != 1) {
-				path.push(std::pair<int, Vector2>(curCost + 1, Vector2(nextX, nextY)));
-			}
-		}
-	}
-	printMap();
-}*/
-
 Vector2 BasicTutorial_00::posToGrid(Vector3 pos) {
 	int gap = 40;
 	int edge = 10;
 	return Vector2(floor(pos.x / gap) + edge / 2, floor(pos.z / gap) + edge / 2);
+}
+
+Vector3 BasicTutorial_00::gridToPos(Vector2 pos) {
+	int gap = 40;
+	int edge = 10;
+	return Vector3((0.5 + (pos.x - edge / 2)) * gap, 0, (0.5 + (pos.y - edge / 2)) * gap);
 }
 
 bool BasicTutorial_00::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
@@ -723,6 +673,7 @@ bool BasicTutorial_00::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButto
 			isAnimation = true;
 			std::cout << "target = " << targetPos.x << ", " << targetPos.z << ", " << std::endl;
 			printMap();
+			route.clear();
 			aStarSearch();
 		}
 	}
@@ -832,7 +783,22 @@ bool BasicTutorial_00::frameStarted(const Ogre::FrameEvent& evt)
 		mAnimationState->setEnabled(true);
 		mAnimationState->addTime(0.5 * evt.timeSinceLastFrame);
 
-		Vector3 pos = mRobot->getPosition();
+		if (route.size() > 0) {
+			Vector3 pos = mRobot->getPosition();
+			Vector3 curTarget = gridToPos(route.front());
+			Vector3 vec = curTarget - pos;
+			Real length = vec.length();
+			vec.normalise();
+			mRobot->lookAt(curTarget, Node::TransformSpace::TS_WORLD);
+			mRobot->yaw(Radian(90));
+			mRobot->translate(evt.timeSinceLastFrame * stepUnit * vec);
+			if (length < 1.0) {
+				route.pop_front();
+			}
+		} else {
+			isAnimation = false;
+		}
+		/*Vector3 pos = mRobot->getPosition();
 		Vector3 vec = targetPos - pos;
 		Real length = vec.length();
 		if (length > 1.0) {
@@ -842,7 +808,7 @@ bool BasicTutorial_00::frameStarted(const Ogre::FrameEvent& evt)
 			mRobot->translate(evt.timeSinceLastFrame * stepUnit * vec);
 		} else {
 			isAnimation = false;
-		}
+		}*/
     /*Vector3 mdir = Vector3(0.0, 0.0, 0.0);
     if (mMoveDirection == mMoveDirection_UP ) {
         mdir += Vector3(0.0, 0.0, -5.0);
