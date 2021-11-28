@@ -867,6 +867,9 @@ bool BasicTutorial_00::frameStarted(const Ogre::FrameEvent& evt)
 		}
 	} else {
 		Entity* mEntity = static_cast<Entity*>(mRobot->getAttachedObject(0));
+		mAnimationState = mEntity->getAnimationState("Walk");
+		mAnimationState->setLoop(false);
+		mAnimationState->setEnabled(false);
 		mAnimationState = mEntity->getAnimationState("Idle");
 		mAnimationState->setLoop(true);
 		mAnimationState->setEnabled(true);
