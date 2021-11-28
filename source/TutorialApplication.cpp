@@ -45,8 +45,8 @@ void BasicTutorial_00::createCamera_00(void)
 {
 	mSceneMgr = mSceneMgrArr[0];
 	mCamera = mCameraArr[0] = mSceneMgr->createCamera("PlayerCam");
-	mCamera->setPosition(Ogre::Vector3(120,300,600));
-	mCamera->lookAt(Ogre::Vector3(120,0,0));
+	mCamera->setPosition(Ogre::Vector3(0,300,0));
+	mCamera->lookAt(Ogre::Vector3(0,0,0.001));
 	mCamera->setNearClipDistance(5);
 	mCameraManArr[0] = new OgreBites::SdkCameraMan(mCamera);   // create a default camera controller
 }
@@ -114,7 +114,7 @@ bool BasicTutorial_00::isValid(int row, int col)
 bool BasicTutorial_00::isUnBlocked(int row, int col)
 {
     // Returns true if the cell is not blocked else false
-    if (map[row][col] == Empty)
+    if (map[row][col] != Obstacle)
         return (true);
     else
         return (false);
@@ -513,8 +513,8 @@ void BasicTutorial_00::createSpace()
 	
     for (int i = 0; i < edge; ++i ) {
 		for (int j = 0; j < edge; ++j ) {
-			int index = 10 * i + j;
-			map[i][j] = temp[i][j];
+			int index = edge * i + j;
+			map[i][j] = static_cast<int>(temp[i][j]);
 			int objectType = map[i][j];
 			int x = (j - edge / 2) * gap;
 			int z = (i - edge / 2) * gap;
