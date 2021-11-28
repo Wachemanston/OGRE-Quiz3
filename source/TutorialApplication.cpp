@@ -24,23 +24,41 @@ using namespace std;
 
 const float PI = 3.141592654;
 
-BasicTutorial_00::BasicTutorial_00(void) : edge(10) {}
+BasicTutorial_00::BasicTutorial_00(void) : edge(10) {
+	int tmp[10][10] = {
+		{Obstacle,	Obstacle,	Obstacle,	Obstacle,	Empty,		Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle},
+		{Obstacle,	Empty,		Empty,		Empty,		Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle},
+		{Obstacle,	Empty,		Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle,	Empty,		Obstacle},
+		{Obstacle,	Empty,		Obstacle,	Empty,		Robot,		Empty,		Empty,		Obstacle,	Empty,		Obstacle},
+		{Obstacle,	Empty,		Obstacle,	Empty,		Obstacle,	Empty,		Empty,		Obstacle,	Empty,		Obstacle},
+		{Obstacle,	Empty,		Obstacle,	Empty,		Empty,		Obstacle,	Empty,		Obstacle,	Empty,		Obstacle},
+		{Obstacle,	Empty,		Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle,	Empty,		Obstacle},
+		{Obstacle,	Empty,		Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle,	Empty,		Obstacle},
+		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle,	Empty,		Empty,		Empty,		Obstacle},
+		{Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Empty,		Obstacle,	Obstacle,	Obstacle,	Obstacle},
+	};
+    for (int i = 0; i < edge; ++i ) {
+		for (int j = 0; j < edge; ++j ) {
+			map[i][j] = static_cast<int>(tmp[i][j]);
+		}
+	}
+	printMap();
+}
 
 void BasicTutorial_00::chooseSceneManager()
 {
 	mSceneMgrArr[0] = mRoot
 		->createSceneManager(ST_GENERIC, "primary");
-	mSceneMgrArr[1] = mRoot
-		->createSceneManager(ST_GENERIC, "secondary");
 }
 
 void BasicTutorial_00::createCamera_00(void)
 {
 	mSceneMgr = mSceneMgrArr[0];
-	mCamera = mCameraArr[0] = mSceneMgr->createCamera("PlayerCam");
-	mCamera->setPosition(Ogre::Vector3(0,300,0));
-	mCamera->lookAt(Ogre::Vector3(0,0,0.001));
+	mCamera = mSceneMgr->createCamera("PlayerCam");
+	mCamera->setPosition(Ogre::Vector3(0,1000,0.001));
+	mCamera->lookAt(Ogre::Vector3(0,0,0));
 	mCamera->setNearClipDistance(5);
+	mCameraArr[0] = mCamera;
 	mCameraManArr[0] = new OgreBites::SdkCameraMan(mCamera);   // create a default camera controller
 }
 
@@ -53,10 +71,9 @@ void BasicTutorial_00::createCamera_01(void)
 
 void BasicTutorial_00::createViewport_00(void)
 {
-	mCamera = mCameraArr[0];
-	Ogre::Viewport* vp = mWindow->addViewport(mCamera);
+	Ogre::Viewport* vp = mWindow->addViewport(mCameraArr[0]);
 	vp->setBackgroundColour(Ogre::ColourValue(0,0.0,1.0));
-	mCamera->setAspectRatio(
+	mCameraArr[0]->setAspectRatio(
 		Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
 
     mViewportArr[0] = vp;
@@ -530,24 +547,12 @@ void BasicTutorial_00::createSpace()
 
 	int edge = 10;
 	int gap = 40;
-	int temp[10][10] = {
-		{Obstacle,	Obstacle,	Obstacle,	Obstacle,	Empty,		Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle},
-		{Obstacle,	Empty,		Empty,		Empty,		Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle},
-		{Obstacle,	Empty,		Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle,	Empty,		Obstacle},
-		{Obstacle,	Empty,		Obstacle,	Empty,		Robot,		Empty,		Empty,		Obstacle,	Empty,		Obstacle},
-		{Obstacle,	Empty,		Obstacle,	Empty,		Obstacle,	Empty,		Empty,		Obstacle,	Empty,		Obstacle},
-		{Obstacle,	Empty,		Obstacle,	Empty,		Empty,		Obstacle,	Empty,		Obstacle,	Empty,		Obstacle},
-		{Obstacle,	Empty,		Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle,	Empty,		Obstacle},
-		{Obstacle,	Empty,		Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle,	Empty,		Obstacle},
-		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle,	Empty,		Empty,		Empty,		Obstacle},
-		{Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Empty,		Obstacle,	Obstacle,	Obstacle,	Obstacle},
-	};
 	
 	int sphereCount = 0;
-    for (int i = 0; i < edge; ++i ) {
-		for (int j = 0; j < edge; ++j ) {
+	int obsCount = 0;
+    for (int i = 0; i < edge; i++ ) {
+		for (int j = 0; j < edge; j++ ) {
 			int index = edge * i + j;
-			map[i][j] = static_cast<int>(temp[i][j]);
 			int objectType = map[i][j];
 			int x = (i - edge / 2) * gap;
 			int z = (j - edge / 2) * gap;
@@ -556,10 +561,11 @@ void BasicTutorial_00::createSpace()
 				case Obstacle:
 					genNameUsingIndex("E_", index, name_en);
 					genNameUsingIndex("S_", index, name_sn);
-					mObstacleEntity[index] = mSceneMgr->createEntity( name_en, "Barrel.mesh" );
-					mObstacle[index] = mSceneMgr->getRootSceneNode()->createChildSceneNode(name_sn, Vector3(x + gap / 2, 0, z + gap / 2));
-					mObstacle[index]->attachObject(mObstacleEntity[index]);
-					mObstacle[index]->scale(6.0, 6.0, 6.0);
+					mObstacleEntity[obsCount] = mSceneMgr->createEntity( name_en, "Barrel.mesh" );
+					mObstacle[obsCount] = mSceneMgr->getRootSceneNode()->createChildSceneNode(name_sn, Vector3(x + gap / 2, 0, z + gap / 2));
+					mObstacle[obsCount]->attachObject(mObstacleEntity[obsCount]);
+					mObstacle[obsCount]->scale(6.0, 6.0, 6.0);
+					obsCount++;
 					break;
 				case Robot:
 					mRobotEntity = mSceneMgr->createEntity("robot_entity", "robot.mesh" );
@@ -576,9 +582,15 @@ void BasicTutorial_00::createSpace()
 					mSphere[sphereCount]->scale(0.1, 0.1, 0.1);
 					sphereCount++;
 					break;
+				default:
+					break;
 			}
 		}
+		std::cout << "(" << i << std::endl;
+		printMap();
     }
+	std::cout << "S" << std::endl;
+	printMap();
 }
 
 void BasicTutorial_00::createScene_00(void) 
@@ -675,10 +687,10 @@ void BasicTutorial_00::createScene( void ) {
     mCamera = mCameraArr[0];
     //mCamera = mCameraArr[1];
     //
-    mCameraMan->getCamera()
+    /*mCameraMan->getCamera()
             ->setPosition(Vector3(-22.30,	409.24,	816.74));
         mCameraMan->getCamera()
-            ->setDirection(Vector3(0.02,	-0.23,	-0.97));
+            ->setDirection(Vector3(0.02,	-0.23,	-0.97));*/
 
 }
 
@@ -686,7 +698,7 @@ void BasicTutorial_00::printMap(void) {
 	int edge = 10;
 	for (int i = 0; i < edge; i++) {
 		for (int j = 0; j < edge; j++) {
-			std::cout << std::setw(8) << map[i][j];
+			std::cout << std::setw(16) << (int) map[i][j];
 		}
 		std::cout << std::endl;
 	}

@@ -83,7 +83,7 @@ protected:
     SceneNode *mObstacle[64];
     Entity *mObstacleEntity[64];
 
-	enum ObjectType { Empty = 0, Obstacle = -2, Robot = -3, Sphere = -4 };
+	enum ObjectType { Empty = 0, Obstacle = 1, Robot = 2, Sphere = 3 };
 	int edge;
 	int map[10][10];
 
