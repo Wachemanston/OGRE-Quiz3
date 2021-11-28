@@ -60,6 +60,8 @@ protected:
     void updateMap();
     void aStarSearch();
 	void printMap(void);
+	void displayRoute();
+	void hideRoute();
 	Ogre::Vector2 posToGrid(Vector3 pos);
 	Ogre::Vector3 gridToPos(Vector2 pos);
 	bool isValid(int row, int col);
@@ -72,7 +74,6 @@ protected:
 	Ogre::SceneManager* mSceneMgrArr[8];
 	OgreBites::SdkCameraMan* mCameraManArr[8];
 
-    int mMoveDirection;
     SceneNode *mRobot;
     Entity *mRobotEntity;
 

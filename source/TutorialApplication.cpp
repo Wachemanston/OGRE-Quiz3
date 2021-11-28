@@ -24,14 +24,7 @@ using namespace std;
 
 const float PI = 3.141592654;
 
-#define mMoveDirection_NONE 0
-#define mMoveDirection_DOWN 1
-#define mMoveDirection_UP   2
-#define mMoveDirection_LEFT 3
-#define mMoveDirection_RIGHT 4
-
-
-BasicTutorial_00::BasicTutorial_00(void) : mMoveDirection(mMoveDirection_NONE), edge(10) {}
+BasicTutorial_00::BasicTutorial_00(void) : edge(10) {}
 
 void BasicTutorial_00::chooseSceneManager()
 {
@@ -166,10 +159,43 @@ std::list<Vector2> tracePath(cell cellDetails[][COL], Pair dest)
         Path.pop();
         printf("-> (%d,%d) ", p.first, p.second);
     }
- 
+
     return route;
 }
- 
+
+void BasicTutorial_00::displayRoute()
+{
+    String name_sn;
+	int gap = 40;
+	int edge = 10;
+	int i = 0;
+
+	for (std::list<Vector2>::iterator itr = route.begin(); itr != route.end(); itr++) {
+		int index = itr->x * edge + itr->y;
+		genNameUsingIndex("sS_", index, name_sn);
+		SceneNode* node = mSceneMgr->getSceneNode(name_sn);
+		node->setVisible(true);
+		i++;
+	}
+
+}
+
+void BasicTutorial_00::hideRoute()
+{
+    String name_sn;
+	int gap = 40;
+	int edge = 10;
+	int i = 0;
+
+	for (std::list<Vector2>::iterator itr = route.begin(); itr != route.end(); itr++) {
+		int index = itr->x * edge + itr->y;
+		genNameUsingIndex("sS_", index, name_sn);
+		SceneNode* node = mSceneMgr->getSceneNode(name_sn);
+		node->setVisible(false);
+		i++;
+	}
+
+}
 // A Function to find the shortest path between
 // a given source cell to a destination cell according
 // to A* Search Algorithm
@@ -300,6 +326,7 @@ void BasicTutorial_00::aStarSearch()
                 cellDetails[i - 1][j].parent_j = j;
                 printf("The destination cell is found\n");
                 route = tracePath(cellDetails, dest);
+				displayRoute();
                 foundDest = true;
                 return;
             }
@@ -348,6 +375,7 @@ void BasicTutorial_00::aStarSearch()
                 cellDetails[i + 1][j].parent_j = j;
                 printf("The destination cell is found\n");
                 route = tracePath(cellDetails, dest);
+				displayRoute();
                 foundDest = true;
                 return;
             }
@@ -395,6 +423,7 @@ void BasicTutorial_00::aStarSearch()
                 cellDetails[i][j + 1].parent_j = j;
                 printf("The destination cell is found\n");
                 route = tracePath(cellDetails, dest);
+				displayRoute();
                 foundDest = true;
                 return;
             }
@@ -444,6 +473,7 @@ void BasicTutorial_00::aStarSearch()
                 cellDetails[i][j - 1].parent_j = j;
                 printf("The destination cell is found\n");
                 route = tracePath(cellDetails, dest);
+				displayRoute();
                 foundDest = true;
                 return;
             }
@@ -501,25 +531,26 @@ void BasicTutorial_00::createSpace()
 	int edge = 10;
 	int gap = 40;
 	int temp[10][10] = {
-		{Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle},
-		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Obstacle},
-		{Obstacle,	Empty,		Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Empty,		Obstacle},
-		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Obstacle},
-		{Empty,		Obstacle,	Empty,		Robot,		Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle},
-		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle,	Empty,		Empty,		Obstacle,	Empty},
-		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Obstacle},
-		{Obstacle,	Empty,		Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Empty,		Obstacle},
-		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Obstacle},
-		{Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle},
+		{Obstacle,	Obstacle,	Obstacle,	Obstacle,	Empty,		Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle},
+		{Obstacle,	Empty,		Empty,		Empty,		Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle},
+		{Obstacle,	Empty,		Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle,	Empty,		Obstacle},
+		{Obstacle,	Empty,		Obstacle,	Empty,		Robot,		Empty,		Empty,		Obstacle,	Empty,		Obstacle},
+		{Obstacle,	Empty,		Obstacle,	Empty,		Obstacle,	Empty,		Empty,		Obstacle,	Empty,		Obstacle},
+		{Obstacle,	Empty,		Obstacle,	Empty,		Empty,		Obstacle,	Empty,		Obstacle,	Empty,		Obstacle},
+		{Obstacle,	Empty,		Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle,	Empty,		Obstacle},
+		{Obstacle,	Empty,		Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle,	Empty,		Obstacle},
+		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle,	Empty,		Empty,		Empty,		Obstacle},
+		{Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Empty,		Obstacle,	Obstacle,	Obstacle,	Obstacle},
 	};
 	
+	int sphereCount = 0;
     for (int i = 0; i < edge; ++i ) {
 		for (int j = 0; j < edge; ++j ) {
 			int index = edge * i + j;
 			map[i][j] = static_cast<int>(temp[i][j]);
 			int objectType = map[i][j];
-			int x = (j - edge / 2) * gap;
-			int z = (i - edge / 2) * gap;
+			int x = (i - edge / 2) * gap;
+			int z = (j - edge / 2) * gap;
 
 			switch(objectType) {
 				case Obstacle:
@@ -534,6 +565,16 @@ void BasicTutorial_00::createSpace()
 					mRobotEntity = mSceneMgr->createEntity("robot_entity", "robot.mesh" );
 					mRobot = mSceneMgr->getRootSceneNode()->createChildSceneNode("robot_scene_node", Vector3(x + gap / 2, 0, z + gap / 2));
 					mRobot->attachObject(mRobotEntity);
+				case Empty:
+					genNameUsingIndex("sE_", index, name_en);
+					genNameUsingIndex("sS_", index, name_sn);
+					mSphereEntity[sphereCount] = mSceneMgr->createEntity( name_en, "sphere.mesh" );
+					mSphereEntity[sphereCount]->setMaterialName("Examples/green");
+					mSphere[sphereCount] = mSceneMgr->getRootSceneNode()->createChildSceneNode(name_sn, Vector3(x + gap / 2, 0, z + gap / 2));
+					mSphere[sphereCount]->attachObject(mSphereEntity[sphereCount]);
+					mSphere[sphereCount]->setVisible(false);
+					mSphere[sphereCount]->scale(0.1, 0.1, 0.1);
+					sphereCount++;
 					break;
 			}
 		}
@@ -673,6 +714,7 @@ bool BasicTutorial_00::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButto
 			isAnimation = true;
 			std::cout << "target = " << targetPos.x << ", " << targetPos.z << ", " << std::endl;
 			printMap();
+			hideRoute();
 			route.clear();
 			aStarSearch();
 		}
@@ -765,8 +807,6 @@ bool BasicTutorial_00::keyReleased( const OIS::KeyEvent &arg )
 
     BaseApplication::keyReleased(arg);
 
-	mMoveDirection = mMoveDirection_NONE;
-
     return flg;
 }
 
@@ -793,38 +833,17 @@ bool BasicTutorial_00::frameStarted(const Ogre::FrameEvent& evt)
 			mRobot->yaw(Radian(90));
 			mRobot->translate(evt.timeSinceLastFrame * stepUnit * vec);
 			if (length < 1.0) {
+				Vector2 p = route.front();
+				int index = p.x * edge + p.y;
+				String name_sn;
+				genNameUsingIndex("sS_", index, name_sn);
+				SceneNode* node = mSceneMgr->getSceneNode(name_sn);
+				node->setVisible(false);
 				route.pop_front();
 			}
 		} else {
 			isAnimation = false;
 		}
-		/*Vector3 pos = mRobot->getPosition();
-		Vector3 vec = targetPos - pos;
-		Real length = vec.length();
-		if (length > 1.0) {
-			vec.normalise();
-			mRobot->lookAt(targetPos, Node::TransformSpace::TS_WORLD);
-			mRobot->yaw(Radian(90));
-			mRobot->translate(evt.timeSinceLastFrame * stepUnit * vec);
-		} else {
-			isAnimation = false;
-		}*/
-    /*Vector3 mdir = Vector3(0.0, 0.0, 0.0);
-    if (mMoveDirection == mMoveDirection_UP ) {
-        mdir += Vector3(0.0, 0.0, -5.0);
-    }
-	
-    if (mMoveDirection == mMoveDirection_DOWN ) {
-        mdir += Vector3(0.0, 0.0, 5.0);
-    }
-	
-    if (mMoveDirection == mMoveDirection_LEFT ) {
-        mdir += Vector3(-5.0, 0.0, 0.0);
-    }
-	
-    if (mMoveDirection == mMoveDirection_RIGHT ) {
-        mdir += Vector3(5.0, 0.0, 0.0);
-    }*/
 	} else {
 		Entity* mEntity = static_cast<Entity*>(mRobot->getAttachedObject(0));
 		mAnimationState = mEntity->getAnimationState("Idle");
