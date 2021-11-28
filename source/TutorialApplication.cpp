@@ -794,6 +794,15 @@ bool BasicTutorial_00::keyPressed( const OIS::KeyEvent &arg )
         //
     }
 
+	if (arg.key == OIS::KC_Q ) {
+		mCameraMan->getCamera()->setPosition(Vector3(-22.30,	409.24,	816.74));
+        mCameraMan->getCamera()->setDirection(Vector3(0.02,	-0.23,	-0.97));
+	}
+
+	if (arg.key == OIS::KC_W ) {
+		mCameraMan->getCamera()->setPosition(Vector3(0,1000,0.001));
+        mCameraMan->getCamera()->lookAt(Ogre::Vector3(0,0,0));
+	}
     BaseApplication::keyPressed(arg);
 
     return flg;
