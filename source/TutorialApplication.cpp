@@ -12,8 +12,15 @@
 #include <sstream>
 #include <string>
 #include <iomanip>
+#include "math.h"
+#include <queue>
+#include <set>
+#include <stack>
+#include <tuple>
+#include <array>
 
 using namespace Ogre;
+using namespace std;
 
 const float PI = 3.141592654;
 
@@ -24,7 +31,7 @@ const float PI = 3.141592654;
 #define mMoveDirection_RIGHT 4
 
 
-BasicTutorial_00::BasicTutorial_00(void) : mMoveDirection(mMoveDirection_NONE) {}
+BasicTutorial_00::BasicTutorial_00(void) : mMoveDirection(mMoveDirection_NONE), edge(10) {}
 
 void BasicTutorial_00::chooseSceneManager()
 {
@@ -74,6 +81,416 @@ void BasicTutorial_00::reset()
 	createScene();
 }
 
+#define COL 10
+#define ROW 10
+
+// Creating a shortcut for int, int pair type
+typedef pair<int, int> Pair;
+ 
+// Creating a shortcut for pair<int, pair<int, int>> type
+typedef pair<double, pair<int, int> > pPair;
+ 
+// A structure to hold the necessary parameters
+struct cell {
+    // Row and Column index of its parent
+    // Note that 0 <= i <= ROW-1 & 0 <= j <= COL-1
+    int parent_i, parent_j;
+    // f = g + h
+    double f, g, h;
+};
+ 
+// A Utility Function to check whether given cell (row, col)
+// is a valid cell or not.
+bool BasicTutorial_00::isValid(int row, int col)
+{
+    // Returns true if row number and column number
+    // is in range
+    return (row >= 0) && (row < ROW) && (col >= 0)
+           && (col < COL);
+}
+ 
+// A Utility Function to check whether the given cell is
+// blocked or not
+bool BasicTutorial_00::isUnBlocked(int row, int col)
+{
+    // Returns true if the cell is not blocked else false
+    if (map[row][col] == Empty)
+        return (true);
+    else
+        return (false);
+}
+ 
+// A Utility Function to check whether destination cell has
+// been reached or not
+bool isDestination(int row, int col, Pair dest)
+{
+    if (row == dest.first && col == dest.second)
+        return (true);
+    else
+        return (false);
+}
+ 
+// A Utility Function to calculate the 'h' heuristics.
+double calculateHValue(int row, int col, Pair dest)
+{
+    // Return using the distance formula
+	return ((double)Ogre::Math::Sqrt(
+        (row - dest.first) * (row - dest.first)
+        + (col - dest.second) * (col - dest.second)));
+}
+ 
+// A Utility Function to trace the path from the source
+// to destination
+void tracePath(cell cellDetails[][COL], Pair dest)
+{
+    printf("\nThe Path is ");
+    int row = dest.first;
+    int col = dest.second;
+ 
+    stack<Pair> Path;
+ 
+    while (!(cellDetails[row][col].parent_i == row
+             && cellDetails[row][col].parent_j == col)) {
+        Path.push(make_pair(row, col));
+        int temp_row = cellDetails[row][col].parent_i;
+        int temp_col = cellDetails[row][col].parent_j;
+        row = temp_row;
+        col = temp_col;
+    }
+ 
+    Path.push(make_pair(row, col));
+    while (!Path.empty()) {
+        pair<int, int> p = Path.top();
+        Path.pop();
+        printf("-> (%d,%d) ", p.first, p.second);
+    }
+ 
+    return;
+}
+ 
+// A Function to find the shortest path between
+// a given source cell to a destination cell according
+// to A* Search Algorithm
+void BasicTutorial_00::aStarSearch()
+{
+	Vector2 goal = posToGrid(targetPos);
+	Vector2 start = posToGrid(mRobot->getPosition());
+	Pair src = make_pair(start.x, start.y);
+	Pair dest = make_pair(goal.x, goal.y);
+	std::cout << "start = (" << start.x << ", " << start.y << ") = " << map[(int) start.x][(int) start.y] << std::endl;
+	std::cout << "goal = (" << goal.x << ", " << goal.y << ") = " << map[(int) goal.x][(int) goal.y] << std::endl;
+
+    // If the source is out of range
+    if (isValid(src.first, src.second) == false) {
+        printf("Source is invalid\n");
+        return;
+    }
+ 
+    // If the destination is out of range
+    if (isValid(dest.first, dest.second) == false) {
+        printf("Destination is invalid\n");
+        return;
+    }
+ 
+    // Either the source or the destination is blocked
+    if (isUnBlocked(src.first, src.second) == false
+        || isUnBlocked(dest.first, dest.second)
+               == false) {
+        printf("Source or the destination is blocked\n");
+        return;
+    }
+ 
+    // If the destination cell is the same as source cell
+    if (isDestination(src.first, src.second, dest)
+        == true) {
+        printf("We are already at the destination\n");
+        return;
+    }
+ 
+    // Create a closed list and initialise it to false which
+    // means that no cell has been included yet This closed
+    // list is implemented as a boolean 2D array
+    bool closedList[ROW][COL];
+    memset(closedList, false, sizeof(closedList));
+ 
+    // Declare a 2D array of structure to hold the details
+    // of that cell
+    cell cellDetails[ROW][COL];
+ 
+    int i, j;
+ 
+    for (i = 0; i < ROW; i++) {
+        for (j = 0; j < COL; j++) {
+            cellDetails[i][j].f = FLT_MAX;
+            cellDetails[i][j].g = FLT_MAX;
+            cellDetails[i][j].h = FLT_MAX;
+            cellDetails[i][j].parent_i = -1;
+            cellDetails[i][j].parent_j = -1;
+        }
+    }
+ 
+    // Initialising the parameters of the starting node
+    i = src.first, j = src.second;
+    cellDetails[i][j].f = 0.0;
+    cellDetails[i][j].g = 0.0;
+    cellDetails[i][j].h = 0.0;
+    cellDetails[i][j].parent_i = i;
+    cellDetails[i][j].parent_j = j;
+ 
+    /*
+     Create an open list having information as-
+     <f, <i, j>>
+     where f = g + h,
+     and i, j are the row and column index of that cell
+     Note that 0 <= i <= ROW-1 & 0 <= j <= COL-1
+     This open list is implemented as a set of pair of
+     pair.*/
+    std::set<pPair> openList;
+ 
+    // Put the starting cell on the open list and set its
+    // 'f' as 0
+    openList.insert(make_pair(0.0, make_pair(i, j)));
+ 
+    // We set this boolean value as false as initially
+    // the destination is not reached.
+    bool foundDest = false;
+ 
+    while (!openList.empty()) {
+        pPair p = *openList.begin();
+ 
+        // Remove this vertex from the open list
+        openList.erase(openList.begin());
+ 
+        // Add this vertex to the closed list
+        i = p.second.first;
+        j = p.second.second;
+        closedList[i][j] = true;
+ 
+        /*
+         Generating all the 8 successor of this cell
+ 
+             N.W   N   N.E
+               \   |   /
+                \  |  /
+             W----Cell----E
+                  / | \
+                /   |  \
+             S.W    S   S.E
+ 
+         Cell-->Popped Cell (i, j)
+         N -->  North       (i-1, j)
+         S -->  South       (i+1, j)
+         E -->  East        (i, j+1)
+         W -->  West           (i, j-1)*/
+ 
+        // To store the 'g', 'h' and 'f' of the 8 successors
+        double gNew, hNew, fNew;
+ 
+        //----------- 1st Successor (North) ------------
+ 
+        // Only process this cell if this is a valid one
+        if (isValid(i - 1, j) == true) {
+            // If the destination cell is the same as the
+            // current successor
+            if (isDestination(i - 1, j, dest) == true) {
+                // Set the Parent of the destination cell
+                cellDetails[i - 1][j].parent_i = i;
+                cellDetails[i - 1][j].parent_j = j;
+                printf("The destination cell is found\n");
+                tracePath(cellDetails, dest);
+                foundDest = true;
+                return;
+            }
+            // If the successor is already on the closed
+            // list or if it is blocked, then ignore it.
+            // Else do the following
+            else if (closedList[i - 1][j] == false
+                     && isUnBlocked(i - 1, j)
+                            == true) {
+                gNew = cellDetails[i][j].g + 1.0;
+                hNew = calculateHValue(i - 1, j, dest);
+                fNew = gNew + hNew;
+ 
+                // If it isn・t on the open list, add it to
+                // the open list. Make the current square
+                // the parent of this square. Record the
+                // f, g, and h costs of the square cell
+                //                OR
+                // If it is on the open list already, check
+                // to see if this path to that square is
+                // better, using 'f' cost as the measure.
+                if (cellDetails[i - 1][j].f == FLT_MAX
+                    || cellDetails[i - 1][j].f > fNew) {
+                    openList.insert(make_pair(
+                        fNew, make_pair(i - 1, j)));
+ 
+                    // Update the details of this cell
+                    cellDetails[i - 1][j].f = fNew;
+                    cellDetails[i - 1][j].g = gNew;
+                    cellDetails[i - 1][j].h = hNew;
+                    cellDetails[i - 1][j].parent_i = i;
+                    cellDetails[i - 1][j].parent_j = j;
+                }
+            }
+        }
+ 
+        //----------- 2nd Successor (South) ------------
+ 
+        // Only process this cell if this is a valid one
+        if (isValid(i + 1, j) == true) {
+            // If the destination cell is the same as the
+            // current successor
+            if (isDestination(i + 1, j, dest) == true) {
+                // Set the Parent of the destination cell
+                cellDetails[i + 1][j].parent_i = i;
+                cellDetails[i + 1][j].parent_j = j;
+                printf("The destination cell is found\n");
+                tracePath(cellDetails, dest);
+                foundDest = true;
+                return;
+            }
+            // If the successor is already on the closed
+            // list or if it is blocked, then ignore it.
+            // Else do the following
+            else if (closedList[i + 1][j] == false
+                     && isUnBlocked(i + 1, j)
+                            == true) {
+                gNew = cellDetails[i][j].g + 1.0;
+                hNew = calculateHValue(i + 1, j, dest);
+                fNew = gNew + hNew;
+ 
+                // If it isn・t on the open list, add it to
+                // the open list. Make the current square
+                // the parent of this square. Record the
+                // f, g, and h costs of the square cell
+                //                OR
+                // If it is on the open list already, check
+                // to see if this path to that square is
+                // better, using 'f' cost as the measure.
+                if (cellDetails[i + 1][j].f == FLT_MAX
+                    || cellDetails[i + 1][j].f > fNew) {
+                    openList.insert(make_pair(
+                        fNew, make_pair(i + 1, j)));
+                    // Update the details of this cell
+                    cellDetails[i + 1][j].f = fNew;
+                    cellDetails[i + 1][j].g = gNew;
+                    cellDetails[i + 1][j].h = hNew;
+                    cellDetails[i + 1][j].parent_i = i;
+                    cellDetails[i + 1][j].parent_j = j;
+                }
+            }
+        }
+ 
+        //----------- 3rd Successor (East) ------------
+ 
+        // Only process this cell if this is a valid one
+        if (isValid(i, j + 1) == true) {
+            // If the destination cell is the same as the
+            // current successor
+            if (isDestination(i, j + 1, dest) == true) {
+                // Set the Parent of the destination cell
+                cellDetails[i][j + 1].parent_i = i;
+                cellDetails[i][j + 1].parent_j = j;
+                printf("The destination cell is found\n");
+                tracePath(cellDetails, dest);
+                foundDest = true;
+                return;
+            }
+ 
+            // If the successor is already on the closed
+            // list or if it is blocked, then ignore it.
+            // Else do the following
+            else if (closedList[i][j + 1] == false
+                     && isUnBlocked(i, j + 1)
+                            == true) {
+                gNew = cellDetails[i][j].g + 1.0;
+                hNew = calculateHValue(i, j + 1, dest);
+                fNew = gNew + hNew;
+ 
+                // If it isn・t on the open list, add it to
+                // the open list. Make the current square
+                // the parent of this square. Record the
+                // f, g, and h costs of the square cell
+                //                OR
+                // If it is on the open list already, check
+                // to see if this path to that square is
+                // better, using 'f' cost as the measure.
+                if (cellDetails[i][j + 1].f == FLT_MAX
+                    || cellDetails[i][j + 1].f > fNew) {
+                    openList.insert(make_pair(
+                        fNew, make_pair(i, j + 1)));
+ 
+                    // Update the details of this cell
+                    cellDetails[i][j + 1].f = fNew;
+                    cellDetails[i][j + 1].g = gNew;
+                    cellDetails[i][j + 1].h = hNew;
+                    cellDetails[i][j + 1].parent_i = i;
+                    cellDetails[i][j + 1].parent_j = j;
+                }
+            }
+        }
+ 
+        //----------- 4th Successor (West) ------------
+ 
+        // Only process this cell if this is a valid one
+        if (isValid(i, j - 1) == true) {
+            // If the destination cell is the same as the
+            // current successor
+            if (isDestination(i, j - 1, dest) == true) {
+                // Set the Parent of the destination cell
+                cellDetails[i][j - 1].parent_i = i;
+                cellDetails[i][j - 1].parent_j = j;
+                printf("The destination cell is found\n");
+                tracePath(cellDetails, dest);
+                foundDest = true;
+                return;
+            }
+ 
+            // If the successor is already on the closed
+            // list or if it is blocked, then ignore it.
+            // Else do the following
+            else if (closedList[i][j - 1] == false
+                     && isUnBlocked(i, j - 1)
+                            == true) {
+                gNew = cellDetails[i][j].g + 1.0;
+                hNew = calculateHValue(i, j - 1, dest);
+                fNew = gNew + hNew;
+ 
+                // If it isn・t on the open list, add it to
+                // the open list. Make the current square
+                // the parent of this square. Record the
+                // f, g, and h costs of the square cell
+                //                OR
+                // If it is on the open list already, check
+                // to see if this path to that square is
+                // better, using 'f' cost as the measure.
+                if (cellDetails[i][j - 1].f == FLT_MAX
+                    || cellDetails[i][j - 1].f > fNew) {
+                    openList.insert(make_pair(
+                        fNew, make_pair(i, j - 1)));
+ 
+                    // Update the details of this cell
+                    cellDetails[i][j - 1].f = fNew;
+                    cellDetails[i][j - 1].g = gNew;
+                    cellDetails[i][j - 1].h = hNew;
+                    cellDetails[i][j - 1].parent_i = i;
+                    cellDetails[i][j - 1].parent_j = j;
+                }
+            }
+        }
+    }
+ 
+    // When the destination cell is not found and the open
+    // list is empty, then we conclude that we failed to
+    // reach the destination cell. This may happen when the
+    // there is no way to destination cell (due to
+    // blockages)
+    if (foundDest == false)
+        printf("Failed to find the Destination Cell\n");
+ 
+    return;
+}
+
 void BasicTutorial_00::createSpace()
 {
     String name_en;
@@ -88,6 +505,7 @@ void BasicTutorial_00::createSpace()
 		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Obstacle},
 		{Empty,		Obstacle,	Empty,		Robot,		Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle},
 		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Obstacle,	Empty,		Empty,		Obstacle,	Empty},
+		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Obstacle},
 		{Obstacle,	Empty,		Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Empty,		Obstacle},
 		{Obstacle,	Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Empty,		Obstacle},
 		{Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle,	Obstacle},
@@ -106,13 +524,13 @@ void BasicTutorial_00::createSpace()
 					genNameUsingIndex("E_", index, name_en);
 					genNameUsingIndex("S_", index, name_sn);
 					mObstacleEntity[index] = mSceneMgr->createEntity( name_en, "Barrel.mesh" );
-					mObstacle[index] = mSceneMgr->getRootSceneNode()->createChildSceneNode(name_sn, Vector3(x, 0, z));
+					mObstacle[index] = mSceneMgr->getRootSceneNode()->createChildSceneNode(name_sn, Vector3(x + gap / 2, 0, z + gap / 2));
 					mObstacle[index]->attachObject(mObstacleEntity[index]);
 					mObstacle[index]->scale(6.0, 6.0, 6.0);
 					break;
 				case Robot:
 					mRobotEntity = mSceneMgr->createEntity("robot_entity", "robot.mesh" );
-					mRobot = mSceneMgr->getRootSceneNode()->createChildSceneNode("robot_scene_node", Vector3(x, 0, z));
+					mRobot = mSceneMgr->getRootSceneNode()->createChildSceneNode("robot_scene_node", Vector3(x + gap / 2, 0, z + gap / 2));
 					mRobot->attachObject(mRobotEntity);
 					break;
 			}
@@ -221,6 +639,80 @@ void BasicTutorial_00::createScene( void ) {
 
 }
 
+void BasicTutorial_00::printMap(void) {
+	int edge = 10;
+	for (int i = 0; i < edge; i++) {
+		for (int j = 0; j < edge; j++) {
+			std::cout << std::setw(8) << map[i][j];
+		}
+		std::cout << std::endl;
+	}
+}
+
+/*void updateMap(void) {
+	Vector2 goal = posToGrid(targetPos);
+	Vector2 start = posToGrid(mRobot->getPosition());
+	int edge = 10;
+	std::cout << "goal = (" << goal.x << ", " << goal.y << ")" << std::endl;
+	std::cout << (int) goal.x << ", " << (int) goal.y << ", " << map[(int) goal.x][(int) goal.y] << std::endl;
+	// If target map is not empty, return
+	if (map[(int) goal.x][(int) goal.y] != Empty) {
+		return;
+	}
+
+	// Update the weight of all empty map from destination
+	for (int i = 0; i < edge; i++) {
+		for (int j = 0; j < edge; j++) {
+			if (map[i][j] == Empty) {
+				map[i][j] = abs(goal.x - i) + abs(goal.y - j);
+			}
+		}
+	}
+	printMap();
+	// Update the weight of all empty map from start with BFS
+	int currentMinCost = 64;
+	std::vector<Vector2> dir;
+	dir.push_back(Vector2(1, 0));
+	dir.push_back(Vector2(0, 1));
+	dir.push_back(Vector2(-1, 0));
+	dir.push_back(Vector2(0, -1));
+
+	std::queue<std::pair<int, Vector2>> path;
+	std::set<int> visited;
+	path.push(std::pair<int, Vector2>(0, Vector2(start.x, start.y)));
+	int iter = 1;
+	while (!path.empty()) {
+		std::pair<int, Vector2> current = path.front();
+		path.pop();
+		int curCost = current.first;
+		Vector2 curPath = current.second;
+		
+		int x = static_cast<int>(curPath.x);
+		int y = static_cast<int>(curPath.y);
+
+		std::cout << "iter = " << iter << ", x=" << x << ",y =" << y << std::endl;
+		iter++;
+
+		map[x][y] += curCost;
+
+		visited.insert(curPath.x * edge + curPath.y);
+		for (int i = 0; i < dir.size(); i++) {
+			int nextX = curPath.x + dir[i].x;
+			int nextY = curPath.y + dir[i].y;
+			if (map[nextX][nextY] == Empty && visited.count(nextX * edge + nextY) != 1) {
+				path.push(std::pair<int, Vector2>(curCost + 1, Vector2(nextX, nextY)));
+			}
+		}
+	}
+	printMap();
+}*/
+
+Vector2 BasicTutorial_00::posToGrid(Vector3 pos) {
+	int gap = 40;
+	int edge = 10;
+	return Vector2(floor(pos.x / gap) + edge / 2, floor(pos.z / gap) + edge / 2);
+}
+
 bool BasicTutorial_00::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
 {
 	if (id == OIS::MB_Left) {
@@ -229,6 +721,9 @@ bool BasicTutorial_00::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButto
 		if (result.first) {
 			targetPos = mRay.getPoint(result.second);
 			isAnimation = true;
+			std::cout << "target = " << targetPos.x << ", " << targetPos.z << ", " << std::endl;
+			printMap();
+			aStarSearch();
 		}
 	}
 
@@ -248,7 +743,7 @@ bool BasicTutorial_00::mouseMoved( const OIS::MouseEvent &arg ) {
 bool BasicTutorial_00::keyPressed( const OIS::KeyEvent &arg )
 {
     bool flg = true;
-    stringstream ss;
+    std::stringstream ss;
     ss << arg.key;
     String msg;
     ss >> msg;
@@ -309,7 +804,7 @@ bool BasicTutorial_00::keyPressed( const OIS::KeyEvent &arg )
 bool BasicTutorial_00::keyReleased( const OIS::KeyEvent &arg )
 {
     bool flg = true;
-    stringstream ss;
+    std::stringstream ss;
     ss << arg.key;
     String msg;
     ss >> msg;

@@ -24,7 +24,7 @@ This is an assignment of 3D Game Programming
 #include "BaseApplication.h"
 
 using namespace Ogre;
-
+#define T = 10;
 class BasicTutorial_00 : public BaseApplication
 {
 public:
@@ -57,6 +57,12 @@ protected:
 	bool mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
 	bool mouseMoved( const OIS::MouseEvent &arg );
     void createSpace();
+    void updateMap();
+    void aStarSearch();
+	void printMap(void);
+	Ogre::Vector2 posToGrid(Vector3 pos);
+	bool isValid(int row, int col);
+	bool isUnBlocked(int row, int col);
 
     void reset();
 protected:
@@ -75,7 +81,8 @@ protected:
     SceneNode *mObstacle[64];
     Entity *mObstacleEntity[64];
 
-	enum ObjectType { Empty = 0, Obstacle = 1, Robot = 2, Sphere = 3 };
+	enum ObjectType { Empty = 0, Obstacle = -2, Robot = -3, Sphere = -4 };
+	int edge;
 	int map[10][10];
 
 	Ogre::Vector3 targetPos;
